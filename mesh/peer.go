@@ -6,17 +6,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net"
-	"regexp"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/evilsocket/islazy/log"
 	"github.com/gopacket/gopacket/layers"
 	"github.com/andatoshiki/shikigrid/crypto"
 	"github.com/andatoshiki/shikigrid/version"
 	"github.com/andatoshiki/shikigrid/wifi"
+	"net"
+	"regexp"
+	"strings"
+	"sync"
+	"time"
 )
 
 var (
@@ -43,29 +42,23 @@ type Peer struct {
 	AdvData      sync.Map
 	AdvPeriod    int
 
-	advEnabled    bool
-	ForceDisabled bool
-
-	mux  *PacketMuxer
-	stop chan struct{}
+	advEnabled bool
+	mux        *PacketMuxer
+	stop       chan struct{}
 }
 
-func MakeLocalPeer(name string, keys *crypto.KeyPair, advertise bool) *Peer {
+func MakeLocalPeer(name string, keys *crypto.KeyPair) *Peer {
 	now := time.Now()
 	peer := &Peer{
-		DetectedAt:    now,
-		SeenAt:        now,
-		PrevSeenAt:    now,
-		SessionID:     make([]byte, 6),
-		Keys:          keys,
-		AdvData:       sync.Map{},
-		AdvPeriod:     SignalingPeriod,
-		stop:          make(chan struct{}),
-		advEnabled:    false,
-		ForceDisabled: false,
-	}
-	if !advertise {
-		peer.ForceDisabled = true
+		DetectedAt: now,
+		SeenAt:     now,
+		PrevSeenAt: now,
+		SessionID:  make([]byte, 6),
+		Keys:       keys,
+		AdvData:    sync.Map{},
+		AdvPeriod:  SignalingPeriod,
+		stop:       make(chan struct{}),
+		advEnabled: false,
 	}
 
 	if _, err := rand.Read(peer.SessionID); err != nil {
@@ -216,7 +209,7 @@ func (peer *Peer) Update(radio *layers.RadioTap, dot11 *layers.Dot11, adv map[st
 		}
 
 		// the signature is SIGN(advertisement), so we need to remove the signature field and convert back to json.
-		// NOTE: fortunately, keys will always be sorted, so we don't have to do anything in order to guarantee signature
+		// NOTE: fortunately, keys will be always sorted, so we don't have to do anything in order to guarantee signature
 		// consistency (https://stackoverflow.com/questions/18668652/how-to-produce-json-with-sorted-keys-in-go)
 		signedMap := adv
 		delete(signedMap, "signature")
@@ -272,9 +265,6 @@ func (peer *Peer) InactiveFor() float64 {
 }
 
 func (peer *Peer) SetData(adv map[string]interface{}) {
-	if peer == nil {
-		return
-	}
 	peer.Lock()
 	defer peer.Unlock()
 

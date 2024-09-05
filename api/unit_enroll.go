@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"github.com/evilsocket/islazy/log"
 	"github.com/andatoshiki/shikigrid/models"
-	"io"
+	"io/ioutil"
 	"net/http"
 )
 
 func (api *API) readEnrollment(w http.ResponseWriter, r *http.Request) (error, models.EnrollmentRequest) {
 	var enroll models.EnrollmentRequest
 
-	body, err := io.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		ERROR(w, http.StatusUnprocessableEntity, err)
 		return err, enroll

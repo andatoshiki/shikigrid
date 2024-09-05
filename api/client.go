@@ -5,8 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
@@ -20,7 +19,6 @@ import (
 
 var (
 	ClientTimeout   = 60
-	ClientKeepalive = 30
 	ClientTokenFile = "/tmp/shikigrid-api-enrollment.json"
 	Endpoint        = ""
 )
@@ -32,34 +30,20 @@ var (
 type Client struct {
 	sync.Mutex
 
-	cli      *http.Client
-	keys     *crypto.KeyPair
-	token    string
-	tokenAt  time.Time
-	data     map[string]interface{}
-	hostname string
+	cli     *http.Client
+	keys    *crypto.KeyPair
+	token   string
+	tokenAt time.Time
+	data    map[string]interface{}
 }
 
-func NewClient(keys *crypto.KeyPair, endpoint string, hostname string) *Client {
-
-	t := &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(ClientTimeout) * time.Second,
-			KeepAlive: time.Duration(ClientKeepalive) * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout:   time.Duration(ClientTimeout) * time.Second,
-		ResponseHeaderTimeout: time.Duration(ClientTimeout) * time.Second,
-		ExpectContinueTimeout: 4 * time.Second,
-	}
-
+func NewClient(keys *crypto.KeyPair, endpoint string) *Client {
 	cli := &Client{
 		cli: &http.Client{
-			Transport: t,
-			Timeout:   time.Duration(ClientTimeout) * time.Second,
+			Timeout: time.Duration(ClientTimeout) * time.Second,
 		},
-		keys:     keys,
-		data:     make(map[string]interface{}),
-		hostname: hostname,
+		keys: keys,
+		data: make(map[string]interface{}),
 	}
 
 	Endpoint = endpoint
@@ -68,7 +52,7 @@ func NewClient(keys *crypto.KeyPair, endpoint string, hostname string) *Client {
 		if time.Since(info.ModTime()) < models.TokenTTL {
 			log.Debug("loading token from %s ...", ClientTokenFile)
 			var data map[string]interface{}
-			if raw, err := os.ReadFile(ClientTokenFile); err == nil {
+			if raw, err := ioutil.ReadFile(ClientTokenFile); err == nil {
 				if err := json.Unmarshal(raw, &data); err == nil {
 					cli.token = data["token"].(string)
 					cli.tokenAt = info.ModTime()
@@ -88,12 +72,7 @@ func NewClient(keys *crypto.KeyPair, endpoint string, hostname string) *Client {
 }
 
 func (c *Client) enroll() error {
-
-	hostname := c.hostname
-	if hostname == "" {
-		hostname = utils.Hostname()
-	}
-	identity := fmt.Sprintf("%s@%s", hostname, c.keys.FingerprintHex)
+	identity := fmt.Sprintf("%s@%s", utils.Hostname(), c.keys.FingerprintHex)
 
 	log.Debug("refreshing api token as %s ...", identity)
 
@@ -125,7 +104,7 @@ func (c *Client) enroll() error {
 
 	if raw, err := json.Marshal(obj); err == nil {
 		log.Debug("saving token to %s ...", ClientTokenFile)
-		if err = os.WriteFile(ClientTokenFile, raw, 0644); err != nil {
+		if err = ioutil.WriteFile(ClientTokenFile, raw, 0644); err != nil {
 			log.Warning("error saving token to %s: %v", ClientTokenFile, err)
 		}
 	} else {
@@ -172,20 +151,19 @@ func (c *Client) request(method string, path string, data interface{}, auth bool
 	if err != nil {
 		return nil, err
 	}
-	body, err := io.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var obj map[string]interface{}
 	if err = json.Unmarshal(body, &obj); err != nil {
-		log.Debug(fmt.Sprintf("Error Unmarshalling json body from request: %v", body))
 		return nil, err
 	}
 
 	if res.StatusCode == 401 {
 		if err := c.enroll(); err != nil {
-			log.Warning("error token expired during operation: %v", err)
+			log.Warning("error token expired failed to re-enroll: %v", err)
 			return nil, err
 		}
 		log.Warning("token expired, re-enroll success")

@@ -18,18 +18,18 @@ clean:
 restart:
 	@service shikigrid restart
 
-release_files: clean cross_compile_libpcap_arm64 # cross_compile_libpcap_arm
+release_files: clean cross_compile_libpcap_x64 cross_compile_libpcap_arm
 	@mkdir build
 	@echo building for linux/amd64 ...
 	@CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc GOARCH=amd64 GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
 	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-amd64.sha256"
 	@zip -j "build/shikigrid-$(VERSION)-amd64.zip" build/shikigrid build/shikigrid-amd64.sha256 > /dev/null
 	@rm -rf build/shikigrid build/shikigrid-amd64.sha256
-	@echo building for linux/armv6l ...
+	@echo building for linux/armhf ...
 	@CGO_ENABLED=1 CC=arm-linux-gnueabi-gcc GOARM=6 GOARCH=arm GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
-	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-armv6l.sha256"
-	@zip -j "build/shikigrid-$(VERSION)-armv6l.zip" build/shikigrid build/shikigrid-armv6l.sha256 > /dev/null
-	@rm -rf build/shikigrid build/shikigrid-armv6l.sha256
+	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-armhf.sha256"
+	@zip -j "build/shikigrid-$(VERSION)-armhf.zip" build/shikigrid build/shikigrid-armhf.sha256 > /dev/null
+	@rm -rf build/shikigrid build/shikigrid-armhf.sha256
 	@echo building for linux/aarch64 ...
 	@CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOARCH=arm64 GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
 	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-aarch64.sha256"
@@ -37,9 +37,9 @@ release_files: clean cross_compile_libpcap_arm64 # cross_compile_libpcap_arm
 	@rm -rf build/shikigrid build/shikigrid-aarch64.sha256
 	@ls -la build
 
-# requires sudo apt-get install bison flex gcc-arm-linux-gnueabi libpcap0.8 libpcap-dev
+# requires sudo apt-get install bison flex gcc-arm-linux-gnueabihf
 cross_compile_libpcap_arm:
-	@echo "Cross-compiling libpcap for armv6l..."
+	@echo "Cross-compiling libpcap for armhf..."
 	@wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz
 	@tar -zxvf libpcap-1.9.1.tar.gz
 	@cd libpcap-1.9.1 && \
@@ -51,18 +51,18 @@ cross_compile_libpcap_arm:
 	@echo "Clean up..."
 	@rm -rf libpcap-1.9.1 libpcap-1.9.1.tar.gz
 
-# requires sudo apt-get install bison flex gcc-aarch64-linux-gnu libpcap0.8 libpcap-dev
-cross_compile_libpcap_arm64:
-	@echo "Cross-compiling libpcap for arm64..."
+# requires sudo apt-get install bison flex gcc-x86-64-linux-gnu
+cross_compile_libpcap_x64:
+	@echo "Cross-compiling libpcap for armhf..."
 	@wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz
 	@tar -zxvf libpcap-1.9.1.tar.gz
 	@cd libpcap-1.9.1 && \
-		export CC=aarch64-linux-gnu-gcc && \
-		./configure --host=aarch64-linux-gnu && \
+		export CC=x86_64-linux-gnu-gcc && \
+		./configure --host=x86_64-linux-gnu && \
 		make
 	@echo "Copying cross-compiled libpcap to /usr/lib/x86_64-linux-gnu/"
-	@sudo cp libpcap-1.9.1/libpcap.a /usr/lib/aarch64-linux-gnu/
+	@sudo cp libpcap-1.9.1/libpcap.a /usr/lib/x86_64-linux-gnu/
 	@echo "Clean up..."
 	@rm -rf libpcap-1.9.1 libpcap-1.9.1.tar.gz
 
-.PHONY: cross_compile_libpcap_arm cross_compile_libpcap_arm64
+.PHONY: cross_compile_libpcap_arm cross_compile_libpcap_x64

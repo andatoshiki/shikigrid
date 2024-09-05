@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/evilsocket/islazy/log"
 	"github.com/andatoshiki/shikigrid/models"
-	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 )
@@ -50,7 +50,7 @@ func (api *API) UnitReportAP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := clientIP(r)
-	body, err := io.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		ERROR(w, http.StatusUnprocessableEntity, ErrEmpty)
 		return
@@ -81,7 +81,7 @@ func (api *API) UnitReportMultipleAP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := clientIP(r)
-	body, err := io.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		ERROR(w, http.StatusUnprocessableEntity, ErrEmpty)
 		return

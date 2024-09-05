@@ -1,11 +1,12 @@
 [Unit]
 Description=shikigrid api service
-Documentation=https://shikigotchi.org/
+Documentation=https://shikigotchi.toshiki.dev/
 Wants=network.target
 After=network.target
 
 [Service]
 Type=simple
+PermissionsStartOnly=true
 ExecStart=/usr/local/bin/shikigrid -log /var/log/shikigrid.log -env /etc/shikigrid/shikigrid.conf -address 127.0.0.1:8666
 Restart=always
 RestartSec=30

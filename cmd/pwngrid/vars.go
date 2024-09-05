@@ -29,7 +29,7 @@ var (
 	id         = 0
 	address    = "0.0.0.0:8666"
 	env        = ".env"
-	iface      = "wlan0mon"
+	iface      = "mon0"
 	keysPath   = ""
 	peersPath  = "/root/peers"
 	keys       = (*crypto.KeyPair)(nil)
@@ -40,7 +40,6 @@ var (
 	memProfile = ""
 	Endpoint   = "https://grid-api.toshiki.dev/api/v1"
 	advertise  = true
-	Hostname   = ""
 )
 
 func init() {
@@ -79,5 +78,4 @@ func init() {
 
 	flag.StringVar(&Endpoint, "endpoint", Endpoint, "Pass which endpoint shikigrid should be using.")
 	flag.BoolVar(&advertise, "advertise", advertise, "Advertise?")
-	flag.StringVar(&Hostname, "hostname", Hostname, "Pass hostname to shikigrid, makes it so it wont read os.hostname()")
 }

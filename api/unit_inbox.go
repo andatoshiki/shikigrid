@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/andatoshiki/shikigrid/crypto"
 	"github.com/andatoshiki/shikigrid/models"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -148,7 +148,7 @@ func (api *API) SendMessageTo(w http.ResponseWriter, r *http.Request) {
 
 	// read the message and signature from the source unit
 	client := clientIP(r)
-	body, err := io.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		ERROR(w, http.StatusUnprocessableEntity, err)
 		return

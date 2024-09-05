@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/evilsocket/islazy/fs"
 	"github.com/evilsocket/islazy/log"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -137,7 +138,7 @@ func (pair *KeyPair) Save() (err error) {
 		},
 	)
 
-	if err = os.WriteFile(pair.PrivatePath, pair.PrivatePEM, os.ModePerm); err != nil {
+	if err = ioutil.WriteFile(pair.PrivatePath, pair.PrivatePEM, os.ModePerm); err != nil {
 		return
 	}
 
@@ -147,7 +148,7 @@ func (pair *KeyPair) Save() (err error) {
 		return err
 	}
 
-	err = os.WriteFile(pair.PublicPath, pair.PublicPEM, os.ModePerm)
+	err = ioutil.WriteFile(pair.PublicPath, pair.PublicPEM, os.ModePerm)
 
 	log.Debug("%s created", pair.PublicPath)
 	return
@@ -155,7 +156,7 @@ func (pair *KeyPair) Save() (err error) {
 
 func (pair *KeyPair) Load() (err error) {
 	log.Debug("reading %s ...", pair.PrivatePath)
-	if pair.PrivatePEM, err = os.ReadFile(pair.PrivatePath); err != nil {
+	if pair.PrivatePEM, err = ioutil.ReadFile(pair.PrivatePath); err != nil {
 		return
 	}
 

@@ -81,7 +81,7 @@ func (router *Router) peersPruner() {
 
 	log.Debug("peers pruner started with a %s period", period)
 
-	for range tick.C {
+	for _ = range tick.C {
 		stale := map[string]*Peer{}
 
 		Peers.Range(func(key, value interface{}) bool {

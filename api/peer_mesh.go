@@ -2,16 +2,15 @@ package api
 
 import (
 	"encoding/json"
-	"io"
-	"net/http"
-	"sort"
-
 	"github.com/evilsocket/islazy/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/andatoshiki/shikigrid/mesh"
+	"io/ioutil"
+	"net/http"
+	"sort"
 )
 
-// PeerGetPeers GET /api/v1/mesh/peers
+// GET /api/v1/mesh/peers
 func (api *API) PeerGetPeers(w http.ResponseWriter, r *http.Request) {
 	peers := make([]*mesh.Peer, 0)
 	mesh.Peers.Range(func(key, value interface{}) bool {
@@ -27,7 +26,7 @@ func (api *API) PeerGetPeers(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, peers)
 }
 
-// PeerGetMemory GET /api/v1/mesh/memory
+// GET /api/v1/mesh/memory
 func (api *API) PeerGetMemory(w http.ResponseWriter, r *http.Request) {
 	peers := api.Mesh.Memory()
 	// higher number of encounters first
@@ -37,7 +36,7 @@ func (api *API) PeerGetMemory(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, peers)
 }
 
-// PeerGetMemoryOf GET /api/v1/mesh/memory/<fingerprint>
+// GET /api/v1/mesh/memory/<fingerprint>
 func (api *API) PeerGetMemoryOf(w http.ResponseWriter, r *http.Request) {
 	fingerprint := chi.URLParam(r, "fingerprint")
 	peer := api.Mesh.MemoryOf(fingerprint)
@@ -48,7 +47,7 @@ func (api *API) PeerGetMemoryOf(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, peer)
 }
 
-// PeerSetSignaling GET /api/v1/mesh/<status>
+// GET /api/v1/mesh/<status>
 func (api *API) PeerSetSignaling(w http.ResponseWriter, r *http.Request) {
 	status := chi.URLParam(r, "status")
 
@@ -66,24 +65,16 @@ func (api *API) PeerSetSignaling(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// PeerGetMeshData GET /api/v1/mesh/data
+// GET /api/v1/mesh/data
 func (api *API) PeerGetMeshData(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusOK, api.Peer.Data())
 }
 
-// PeerSetMeshData POST /api/v1/mesh/data
+// POST /api/v1/mesh/data
 func (api *API) PeerSetMeshData(w http.ResponseWriter, r *http.Request) {
 	var newData map[string]interface{}
 
-	if api.Peer.ForceDisabled == true {
-		api.Peer.Advertise(false)
-		JSON(w, http.StatusOK, map[string]interface{}{
-			"success": true, // this should be changed later when shikigotchi can handle shikigrid being force advertise disabled
-		})
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		ERROR(w, http.StatusUnprocessableEntity, err)
 		return
