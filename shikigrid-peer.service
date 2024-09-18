@@ -1,13 +1,13 @@
 [Unit]
 Description=shikigrid peer service
-Documentation=https://shikigotchi.toshiki.dev/
+Documentation=https://pwnagotchi.ai/
 Wants=network.target
 After=network.target
 
 [Service]
 Type=simple
 PermissionsStartOnly=true
-ExecStart=/usr/local/bin/shikigrid -log /var/log/shikigrid.log -peers /root/peers -address 127.0.0.1:8666
+ExecStart=/usr/local/bin/shikigrid -log /var/log/shikigrid.log -peer -address 127.0.0.1:8666
 Restart=always
 RestartSec=30
 

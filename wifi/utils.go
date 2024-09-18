@@ -2,8 +2,8 @@ package wifi
 
 import (
 	"bytes"
-	"github.com/gopacket/gopacket"
-	"github.com/gopacket/gopacket/layers"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 func Serialize(layers ...gopacket.SerializableLayer) (error, []byte) {

@@ -1,11 +1,6 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"runtime/pprof"
-	"time"
-
 	"github.com/evilsocket/islazy/fs"
 	"github.com/evilsocket/islazy/log"
 	"github.com/andatoshiki/shikigrid/api"
@@ -15,6 +10,10 @@ import (
 	"github.com/andatoshiki/shikigrid/utils"
 	"github.com/andatoshiki/shikigrid/version"
 	"github.com/joho/godotenv"
+	"os"
+	"os/signal"
+	"runtime/pprof"
+	"time"
 )
 
 func cleanup() {
@@ -86,11 +85,6 @@ func waitForKeys() {
 
 func setupMesh() {
 	var err error
-
-	if advertise == false {
-		return //this probably doesnt work
-	}
-
 	peer = mesh.MakeLocalPeer(utils.Hostname(), keys)
 	if err = peer.StartAdvertising(iface); err != nil {
 		log.Fatal("error while starting signaling: %v", err)
@@ -131,7 +125,7 @@ func setupMode() string {
 
 	// for inbox actions, set the keys to the default path if empty
 	if (whoami || inbox) && keysPath == "" {
-		keysPath = "/etc/pwnagotchi/"
+		keysPath = "/etc/shikigotchi/"
 	}
 
 	// generate keypair
@@ -150,12 +144,12 @@ func setupMode() string {
 		os.Exit(0)
 	}
 
-	mode := "peer"
+	mode := "server"
 	// if keys have been passed explicitly, or one of the inbox actions
 	// has been specified, we're running on the unit
-	// if keysPath != "" {
-	//    mode = "peer"
-	// }
+	if keysPath != "" {
+		mode = "peer"
+	}
 
 	log.Info("shikigrid v%s starting in %s mode ...", version.Version, mode)
 
@@ -170,11 +164,7 @@ func setupMode() string {
 		}
 		// print identity and exit
 		if whoami {
-			if Endpoint == "https://grid-api.toshiki.dev/api/v1" {
-				log.Info("https://toshiki.dev/search/%s", keys.FingerprintHex)
-			} else {
-				log.Info("https://pwnagotchi.ai/pwnfile/#!%s", keys.FingerprintHex)
-			}
+			log.Info("https://pwnagotchi.ai/pwnfile/#!%s", keys.FingerprintHex)
 			os.Exit(0)
 		}
 		// only start mesh signaling if this is not an inbox action
@@ -187,7 +177,7 @@ func setupMode() string {
 	}
 
 	// setup the proper routes for either server or peer mode
-	err, server = api.Setup(keys, peer, router, Endpoint)
+	err, server = api.Setup(keys, peer, router)
 	if err != nil {
 		log.Fatal("%v", err)
 	}

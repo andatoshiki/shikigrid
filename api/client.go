@@ -5,27 +5,25 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/evilsocket/islazy/log"
+	"github.com/andatoshiki/shikigrid/crypto"
+	"github.com/andatoshiki/shikigrid/models"
+	"github.com/andatoshiki/shikigrid/utils"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/evilsocket/islazy/log"
-	"github.com/andatoshiki/shikigrid/crypto"
-	"github.com/andatoshiki/shikigrid/models"
-	"github.com/andatoshiki/shikigrid/utils"
 )
 
 var (
 	ClientTimeout   = 60
 	ClientTokenFile = "/tmp/shikigrid-api-enrollment.json"
-	Endpoint        = ""
 )
 
-//const (
-//	Endpoint
-//)
+const (
+	Endpoint = "https://shikigrid-go.toshiki.dev/api/v1"
+)
 
 type Client struct {
 	sync.Mutex
@@ -37,7 +35,7 @@ type Client struct {
 	data    map[string]interface{}
 }
 
-func NewClient(keys *crypto.KeyPair, endpoint string) *Client {
+func NewClient(keys *crypto.KeyPair) *Client {
 	cli := &Client{
 		cli: &http.Client{
 			Timeout: time.Duration(ClientTimeout) * time.Second,
@@ -45,8 +43,6 @@ func NewClient(keys *crypto.KeyPair, endpoint string) *Client {
 		keys: keys,
 		data: make(map[string]interface{}),
 	}
-
-	Endpoint = endpoint
 
 	if info, err := os.Stat(ClientTokenFile); err == nil {
 		if time.Since(info.ModTime()) < models.TokenTTL {
@@ -159,14 +155,6 @@ func (c *Client) request(method string, path string, data interface{}, auth bool
 	var obj map[string]interface{}
 	if err = json.Unmarshal(body, &obj); err != nil {
 		return nil, err
-	}
-
-	if res.StatusCode == 401 {
-		if err := c.enroll(); err != nil {
-			log.Warning("error token expired failed to re-enroll: %v", err)
-			return nil, err
-		}
-		log.Warning("token expired, re-enroll success")
 	}
 
 	if res.StatusCode != 200 {

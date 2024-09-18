@@ -3,7 +3,8 @@ package api
 import (
 	"fmt"
 	"github.com/evilsocket/islazy/log"
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"net/http"
 )
 
@@ -17,6 +18,8 @@ func cached(seconds int, next http.HandlerFunc) http.HandlerFunc {
 
 func (api *API) setupServerRoutes() {
 	log.Debug("registering server api ...")
+
+	api.Router.Use(middleware.DefaultCompress)
 
 	api.Router.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {

@@ -1,11 +1,10 @@
 package api
 
 import (
-	"net/http"
-
-	"github.com/go-chi/chi/v5"
 	"github.com/andatoshiki/shikigrid/crypto"
 	"github.com/andatoshiki/shikigrid/mesh"
+	"github.com/go-chi/chi"
+	"net/http"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
@@ -20,13 +19,13 @@ type API struct {
 	Client *Client
 }
 
-func Setup(keys *crypto.KeyPair, peer *mesh.Peer, router *mesh.Router, Endpoint string) (err error, api *API) {
+func Setup(keys *crypto.KeyPair, peer *mesh.Peer, router *mesh.Router) (err error, api *API) {
 	api = &API{
 		Router: chi.NewRouter(),
 		Keys:   keys,
 		Peer:   peer,
 		Mesh:   router,
-		Client: NewClient(keys, Endpoint),
+		Client: NewClient(keys),
 	}
 
 	api.Router.Use(CORS)

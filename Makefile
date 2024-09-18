@@ -1,4 +1,4 @@
-VERSION := $(shell sed -n 's/Version\s*=\s*"\([0-9.]\+\)"/\1/p' version/ver.go | tr -d '\t')
+VERSION=$(shell git describe --abbrev=0 --tags)
 
 all: clean
 	@mkdir build
@@ -8,9 +8,12 @@ all: clean
 install:
 	@cp build/shikigrid /usr/local/bin/
 	@mkdir -p /etc/systemd/system/
+	@cp shikigrid.service /etc/systemd/system/
 	@mkdir -p /etc/shikigrid/
 	@cp env.example /etc/shikigrid/shikigrid.conf
+	@chmod 644 /etc/systemd/system/shikigrid.service
 	@systemctl daemon-reload
+	@systemctl enable shikigrid.service
 
 clean:
 	@rm -rf build
@@ -18,51 +21,16 @@ clean:
 restart:
 	@service shikigrid restart
 
-release_files: clean cross_compile_libpcap_x64 cross_compile_libpcap_arm
+release_files: clean
 	@mkdir build
 	@echo building for linux/amd64 ...
-	@CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc GOARCH=amd64 GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
-	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-amd64.sha256"
-	@zip -j "build/shikigrid-$(VERSION)-amd64.zip" build/shikigrid build/shikigrid-amd64.sha256 > /dev/null
-	@rm -rf build/shikigrid build/shikigrid-amd64.sha256
-	@echo building for linux/armhf ...
-	@CGO_ENABLED=1 CC=arm-linux-gnueabi-gcc GOARM=6 GOARCH=arm GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
-	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-armhf.sha256"
-	@zip -j "build/shikigrid-$(VERSION)-armhf.zip" build/shikigrid build/shikigrid-armhf.sha256 > /dev/null
-	@rm -rf build/shikigrid build/shikigrid-armhf.sha256
-	@echo building for linux/aarch64 ...
-	@CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOARCH=arm64 GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
-	@openssl dgst -sha256 "build/shikigrid" > "build/shikigrid-aarch64.sha256"
-	@zip -j "build/shikigrid-$(VERSION)-aarch64.zip" build/shikigrid build/shikigrid-aarch64.sha256 > /dev/null
-	@rm -rf build/shikigrid build/shikigrid-aarch64.sha256
+	@GOARM=6 GOARCH=amd64 GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
+	@zip -j "build/shikigrid_linux_amd64_$(VERSION).zip" build/shikigrid > /dev/null
+	@rm -rf build/shikigrid
+	@echo building for linux/armv6l ...
+	@GOARM=6 GOARCH=arm GOOS=linux go build -o build/shikigrid cmd/shikigrid/*.go
+	@zip -j "build/shikigrid_linux_armv6l_$(VERSION).zip" build/shikigrid > /dev/null
+	@rm -rf build/shikigrid
+	@openssl dgst -sha256 "build/shikigrid_linux_amd64_$(VERSION).zip" > "build/shikigrid-hashes.sha256"
+	@openssl dgst -sha256 "build/shikigrid_linux_armv6l_$(VERSION).zip" >> "build/shikigrid-hashes.sha256"
 	@ls -la build
-
-# requires sudo apt-get install bison flex gcc-arm-linux-gnueabihf
-cross_compile_libpcap_arm:
-	@echo "Cross-compiling libpcap for armhf..."
-	@wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz
-	@tar -zxvf libpcap-1.9.1.tar.gz
-	@cd libpcap-1.9.1 && \
-		export CC=arm-linux-gnueabi-gcc && \
-		./configure --host=arm-linux-gnueabi && \
-		make
-	@echo "Copying cross-compiled libpcap to /usr/lib/arm-linux-gnueabi/"
-	@sudo cp libpcap-1.9.1/libpcap.a /usr/lib/arm-linux-gnueabi/
-	@echo "Clean up..."
-	@rm -rf libpcap-1.9.1 libpcap-1.9.1.tar.gz
-
-# requires sudo apt-get install bison flex gcc-x86-64-linux-gnu
-cross_compile_libpcap_x64:
-	@echo "Cross-compiling libpcap for armhf..."
-	@wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz
-	@tar -zxvf libpcap-1.9.1.tar.gz
-	@cd libpcap-1.9.1 && \
-		export CC=x86_64-linux-gnu-gcc && \
-		./configure --host=x86_64-linux-gnu && \
-		make
-	@echo "Copying cross-compiled libpcap to /usr/lib/x86_64-linux-gnu/"
-	@sudo cp libpcap-1.9.1/libpcap.a /usr/lib/x86_64-linux-gnu/
-	@echo "Clean up..."
-	@rm -rf libpcap-1.9.1 libpcap-1.9.1.tar.gz
-
-.PHONY: cross_compile_libpcap_arm cross_compile_libpcap_x64

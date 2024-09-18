@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/evilsocket/islazy/log"
-	"github.com/gopacket/gopacket"
-	"github.com/gopacket/gopacket/layers"
 	"github.com/andatoshiki/shikigrid/wifi"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"sync"
 	"time"
 )

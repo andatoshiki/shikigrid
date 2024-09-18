@@ -1,6 +1,6 @@
 [Unit]
 Description=shikigrid api service
-Documentation=https://shikigotchi.toshiki.dev/
+Documentation=https://pwnagotchi.ai/
 Wants=network.target
 After=network.target
 
