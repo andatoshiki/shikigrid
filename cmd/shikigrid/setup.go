@@ -131,7 +131,7 @@ func setupMode() string {
 
 	// for inbox actions, set the keys to the default path if empty
 	if (whoami || inbox) && keysPath == "" {
-		keysPath = "/etc/pwnagotchi/"
+		keysPath = "/etc/shikigotchi/"
 	}
 
 	// generate keypair
